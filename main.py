@@ -70,8 +70,8 @@ def get_feelslike_emoji(t):
     try:
         t = float(t)
         if t < 5: return "🥶"
-        if t < 25: return "�"
-        return "�🥵"
+        if t < 25: return "🌡️"
+        return "🥵"
     except: return "🌡️"
 
 def get_visual_scale(value, max_val=100, emoji="▫️", empty_char="—", alt_zero=None):
@@ -221,12 +221,13 @@ def format_weather_message(data: dict, city: str, is_tomorrow: bool = False) -> 
         f"• Ciśnienie: {pressure_mb} hPa" if pressure_mb != "N/A" else "",
         "",
         "🌓 *ASTRONOMIA*",
-        f"• 🌅 {sunrise_24h} | � {sunset_24h}",
+        f"• 🌅 {sunrise_24h} | 🌇 {sunset_24h}",
         f"• Księżyc: {astro.get('moon_phase', 'N/A')} {MOON_EMOJIS.get(astro.get('moon_phase'), '🌙')}",
         alerts_section
     ]
 
-    final_msg = "\n".join([line for line in msg if line.strip()])
+    # Łączymy linie, zachowując te puste dla lepszej czytelności
+    final_msg = "\n".join([line for line in msg if line is not None]).strip()
 
     # Keyboard
     keyboard = []
