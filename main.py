@@ -56,6 +56,35 @@ def fetch_weather_data(city: str, days: int = 1) -> dict:
     except Exception:
         return {"error": f"❌ Błąd sieci przy pobieraniu danych dla {city}."}
 
+def get_temp_emoji(temp):
+    try:
+        t = float(temp)
+        if t < 0: return "❄️🧊"
+        if t < 10: return "☁️🧣"
+        if t < 20: return "🌤️🍃"
+        if t < 30: return "☀️😎"
+        return "🔥🥵"
+    except: return "🌡️"
+
+def get_wind_emoji(speed):
+    try:
+        s = float(speed)
+        if s < 10: return "🍃"
+        if s < 30: return "🌬️"
+        if s < 60: return "💨"
+        return "🌪️🆘"
+    except: return "💨"
+
+def get_uv_emoji(uv):
+    try:
+        u = float(uv)
+        if u <= 2: return "✅"
+        if u <= 5: return "🟡"
+        if u <= 7: return "🟠"
+        if u <= 10: return "🔴"
+        return "🟣🆘"
+    except: return "☀️"
+
 def format_weather_message(data: dict, city: str, is_tomorrow: bool = False) -> tuple:
     if "error" in data:
         return data["error"], None
@@ -73,31 +102,20 @@ def format_weather_message(data: dict, city: str, is_tomorrow: bool = False) -> 
         day = target_day_data.get("day", {})
         
         temp_c = day.get("avgtemp_c", "N/A")
-        feelslike_c = "N/A" # Daily averages don't have feelslike
+        maxtemp_c = day.get("maxtemp_c", "N/A")
+        mintemp_c = day.get("mintemp_c", "N/A")
+        feelslike_c = "N/A"
         humidity = day.get("avghumidity", "N/A")
         wind_kph = day.get("maxwind_kph", "N/A")
         condition_text = day.get("condition", {}).get("text", "N/A")
         precip_mm = day.get("totalprecip_mm", 0)
         uv = day.get("uv", "N/A")
-        
         chance_of_rain = day.get("daily_chance_of_rain", "N/A")
-        try:
-            is_raining = "Tak 🌧️" if int(chance_of_rain) > 50 else "Nie 🚫"
-        except (ValueError, TypeError):
-            is_raining = "Nieznane"
-            
-        maxtemp_c = day.get("maxtemp_c", "N/A")
-        mintemp_c = day.get("mintemp_c", "N/A")
-        
-        astro = target_day_data.get("astro", {})
-        sunset_str = astro.get("sunset", "N/A")
-        moon_phase = astro.get("moon_phase", "N/A")
-        
         pressure_mb = "N/A"
         gust_kph = "N/A"
         aqi_index = "N/A"
         
-        header = f"📅 *Pogoda na jutro ({date_str}) w {actual_city}, {country}*"
+        header = f"📅 *POGODA NA JUTRO*\n📍 {actual_city}, {country} ({date_str})"
     else:
         target_day_data = forecast_days[0] if forecast_days else {}
         day = target_day_data.get("day", {})
@@ -114,76 +132,92 @@ def format_weather_message(data: dict, city: str, is_tomorrow: bool = False) -> 
         
         air_quality = current.get("air_quality", {})
         aqi_index = air_quality.get("gb-defra-index", "N/A")
-        if aqi_index != "N/A":
-            try:
-                aqi_int = int(aqi_index)
-                if aqi_int <= 3: aqi_index = f"{aqi_int} (Dobra 🟢)"
-                elif aqi_int <= 6: aqi_index = f"{aqi_int} (Umiarkowana 🟡)"
-                else: aqi_index = f"{aqi_int} (Zła 🔴)"
-            except ValueError:
-                pass
-                
-        chance_of_rain = day.get("daily_chance_of_rain", "N/A")
-        is_raining = "Tak 🌧️" if precip_mm > 0 else "Nie 🚫"
         
+        chance_of_rain = day.get("daily_chance_of_rain", "N/A")
         maxtemp_c = day.get("maxtemp_c", "N/A")
         mintemp_c = day.get("mintemp_c", "N/A")
         
-        astro = target_day_data.get("astro", {})
-        sunset_str = astro.get("sunset", "N/A")
-        moon_phase = astro.get("moon_phase", "N/A")
-        
-        header = f"🌍 *Aktualna pogoda w {actual_city}, {country}*"
+        header = f"🌍 *AKTUALNA POGODA*\n📍 {actual_city}, {country}"
 
-    # Format sunset specifically to 24h
-    sunset_24h = "N/A"
-    try:
-        if sunset_str != "N/A":
-            sunset_time = datetime.strptime(sunset_str, "%I:%M %p")
-            sunset_24h = sunset_time.strftime("%H:%M")
-    except Exception:
-        pass
-
-    moon_emoji = MOON_EMOJIS.get(moon_phase, "🌙")
+    # Helpers for Scale/Dynamic Emojis
+    temp_icon = get_temp_emoji(temp_c)
+    wind_icon = get_wind_emoji(wind_kph)
+    uv_icon = get_uv_emoji(uv)
     
-    # Check for alerts
+    # AQI Scale
+    aqi_desc = ""
+    if aqi_index != "N/A":
+        try:
+            val = int(aqi_index)
+            if val <= 3: aqi_desc = "Dobra 🟢"
+            elif val <= 6: aqi_desc = "Średnia �"
+            else: aqi_desc = "Zła 🔴"
+        except: aqi_desc = str(aqi_index)
+
+    # Moon/Sky
+    astro = target_day_data.get("astro", {})
+    sunrise_str = astro.get("sunrise", "N/A")
+    sunset_str = astro.get("sunset", "N/A")
+    moon_phase = astro.get("moon_phase", "N/A")
+    moon_illumination = astro.get("moon_illumination", "N/A")
+    moon_emoji = MOON_EMOJIS.get(moon_phase, "🌙")
+
+    # Format times and calculate day length
+    sunrise_24h = "N/A"
+    sunset_24h = "N/A"
+    day_duration = "N/A"
+    try:
+        if sunrise_str != "N/A" and sunset_str != "N/A":
+            sr_dt = datetime.strptime(sunrise_str, "%I:%M %p")
+            ss_dt = datetime.strptime(sunset_str, "%I:%M %p")
+            sunrise_24h = sr_dt.strftime("%H:%M")
+            sunset_24h = ss_dt.strftime("%H:%M")
+            
+            # Duration
+            diff = ss_dt - sr_dt
+            hours, remainder = divmod(diff.seconds, 3600)
+            minutes, _ = divmod(remainder, 60)
+            day_duration = f"{hours}h {minutes}m"
+    except: pass
+
+    # Alerts
     alerts_data = data.get("alerts", {}).get("alert", [])
     alerts_text = ""
-    # Usually alerts make more sense for today's forecast or general alerts
     if alerts_data and not is_tomorrow:
-        alerts_text = "\n\n⚠️ *Ostrzeżenia pogodowe:*\n"
-        for alert in alerts_data[:2]:
-            event = alert.get("event", "Ostrzeżenie")
-            alerts_text += f"❗ {event}\n"
+        alerts_text = "\n\n⚠️ *ALERTY:*\n" + "\n".join([f"• {a.get('event')}" for a in alerts_data[:2]])
 
-    msg = (f"{header}\n\n"
-           f"🌡️ *Temperatura:* {temp_c}°C {f'(Odczuwalna: {feelslike_c}°C)' if feelslike_c != 'N/A' else ''}\n"
-           f"📉 *Min/Max:* {mintemp_c}°C / {maxtemp_c}°C\n"
-           f"☁️ *Warunki:* {condition_text}\n"
-           f"💧 *Wilgotność:* {humidity}%\n"
-           f"{f'🧭 *Ciśnienie:* {pressure_mb} hPa' if pressure_mb != 'N/A' else ''}\n"
-           f"💨 *Wiatr:* {wind_kph} km/h {f'(W porywach: {gust_kph} km/h)' if gust_kph != 'N/A' else ''}\n"
-           f"🌧️ *Opady:* {is_raining} (Szansa: {chance_of_rain}%)\n"
-           f"{f'☀️ *Indeks UV:* {uv}' if uv != 'N/A' else ''}\n"
-           f"{f'😷 *Jakość powietrza (AQI):* {aqi_index}' if aqi_index != 'N/A' else ''}\n\n"
-           f"🌇 *Zachód słońca:* {sunset_24h}\n"
-           f"✨ *Faza księżyca:* {moon_phase} {moon_emoji}{alerts_text}")
-           
-    # Clean up empty lines that might occur if some fields are N/A and not shown
-    msg = "\n".join([line for line in msg.split("\n") if line.strip() != ""])
-    msg = msg.replace("\n\n\n", "\n\n")
+    # Building the new UI structure: Param -> Value -> Emoji
+    msg = [
+        header,
+        "",
+        f"Temperatura: {temp_c}°C {temp_icon}",
+        f"Odczuwalna: {feelslike_c}°C 🌡️" if feelslike_c != "N/A" else f"Zakres: {mintemp_c} - {maxtemp_c}°C 📉",
+        f"Warunki: {condition_text} ☁️",
+        f"Wilgotność: {humidity}% 💧",
+        f"Ciśnienie: {pressure_mb} hPa 🧭" if pressure_mb != "N/A" else f"Szansa opadów: {chance_of_rain}% 🌧️",
+        f"Wiatr: {wind_kph} km/h {wind_icon}",
+        f"Porywy: {gust_kph} km/h 💨" if gust_kph != "N/A" else "",
+        f"Indeks UV: {uv} {uv_icon}" if uv != "N/A" else "",
+        f"Jakość powietrza: {aqi_desc}" if aqi_desc else "",
+        "",
+        f"Wschód słońca: {sunrise_24h} 🌅",
+        f"Zachód słońca: {sunset_24h} 🌇",
+        f"Długość dnia: {day_duration} ⏳",
+        f"Faza księżyca: {moon_phase} ({moon_illumination}%) {moon_emoji}",
+        alerts_text
+    ]
 
-    # Create inline keyboard for toggles
+    final_msg = "\n".join([line for line in msg if line.strip()])
+
+    # Keyboard
     keyboard = []
     if is_tomorrow:
-        keyboard.append([InlineKeyboardButton("🔙 Pogoda na dzisiaj", callback_data=f"today_{city}")])
+        keyboard.append([InlineKeyboardButton("🔙 Dzisiaj", callback_data=f"today_{city}")])
     else:
-        keyboard.append([InlineKeyboardButton("📅 Pogoda na jutro", callback_data=f"tomorrow_{city}")])
-        
+        keyboard.append([InlineKeyboardButton("📅 Jutro", callback_data=f"tomorrow_{city}")])
     keyboard.append([InlineKeyboardButton("🔄 Odśwież", callback_data=f"refresh_{city}")])
-    reply_markup = InlineKeyboardMarkup(keyboard)
     
-    return msg, reply_markup
+    return final_msg, InlineKeyboardMarkup(keyboard)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
