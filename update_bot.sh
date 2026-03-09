@@ -10,7 +10,10 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "        🚀 AKTUALIZACJA WEATHER BOT"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-# 1. Stop Bot
+# 1. Start: Anchor to script directory
+cd "$(dirname "$0")"
+
+# 1.1 Stop Bot
 if screen -list | grep -q "$SESSION_NAME"; then
     screen -S "$SESSION_NAME" -X quit > /dev/null 2>&1
     STATUS_STOP="✅ ZATRZYMANO"
@@ -19,10 +22,14 @@ else
 fi
 
 # 2. Git Pull
-PRE_COMMIT=$(git rev-parse --short HEAD)
-if git pull origin main > /dev/null 2>&1; then
-    POST_COMMIT=$(git rev-parse --short HEAD)
-    COMMIT_MSG=$(git log -1 --format="%s")
+PRE_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+GIT_OUT=$(git pull origin main 2>&1)
+GIT_EXIT=$?
+
+if [ $GIT_EXIT -eq 0 ]; then
+    POST_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+    COMMIT_MSG=$(git log -1 --format="%s" 2>/dev/null || echo "N/A")
+    
     if [ "$PRE_COMMIT" != "$POST_COMMIT" ]; then
         STATUS_GIT="✅ POBRANO ($POST_COMMIT)"
         COMMIT_INFO="🆕 Nowy commit: $POST_COMMIT - $COMMIT_MSG"
@@ -32,7 +39,7 @@ if git pull origin main > /dev/null 2>&1; then
     fi
 else
     STATUS_GIT="❌ BŁĄD GIT"
-    COMMIT_INFO="⚠️ Nie udało się pobrać zmian."
+    COMMIT_INFO="⚠️ Błąd: $(echo "$GIT_OUT" | head -n 1)"
 fi
 
 # 3. Dependencies
