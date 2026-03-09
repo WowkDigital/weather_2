@@ -19,10 +19,20 @@ else
 fi
 
 # 2. Git Pull
+PRE_COMMIT=$(git rev-parse --short HEAD)
 if git pull origin main > /dev/null 2>&1; then
-    STATUS_GIT="✅ POBRANO"
+    POST_COMMIT=$(git rev-parse --short HEAD)
+    COMMIT_MSG=$(git log -1 --format="%s")
+    if [ "$PRE_COMMIT" != "$POST_COMMIT" ]; then
+        STATUS_GIT="✅ POBRANO ($POST_COMMIT)"
+        COMMIT_INFO="🆕 Nowy commit: $POST_COMMIT - $COMMIT_MSG"
+    else
+        STATUS_GIT="✅ AKTUALNY"
+        COMMIT_INFO="ℹ️ Już aktualny: $POST_COMMIT - $COMMIT_MSG"
+    fi
 else
     STATUS_GIT="❌ BŁĄD GIT"
+    COMMIT_INFO="⚠️ Nie udało się pobrać zmian."
 fi
 
 # 3. Dependencies
@@ -54,6 +64,8 @@ echo " [1/4] Sesja screen:     $STATUS_STOP"
 echo " [2/4] Kod (Git):        $STATUS_GIT"
 echo " [3/4] Zależności:       $STATUS_DEPS"
 echo " [4/4] Status bota:      $STATUS_START"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo " $COMMIT_INFO"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo " ✨ Wynik:  Pomyślnie zaktualizowano!"
 echo " ⏳ Czas:   ${ELAPSED_TIME} sekund"
