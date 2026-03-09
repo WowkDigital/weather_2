@@ -26,12 +26,28 @@ def get_weather(city: str) -> str:
     if not WEATHER_API_KEY:
         return "⚠️ Weather API key is not configured."
     
-    # Send a request to the API
-    url = f"http://api.weatherapi.com/v1/forecast.json?key={WEATHER_API_KEY}&q={city}&days=1&aqi=no&alerts=no"
-    response = requests.get(url)
+    # Mapping for cities that are not recognized by the API in Polish (e.g. Wrocław)
+    city_map = {
+        "Wrocław": "Wroclaw"
+    }
+    query_city = city_map.get(city, city)
     
-    if response.status_code != 200:
-        return f"❌ Failed to get weather data for {city}. Please try again later."
+    # Send a request to the API
+    url = "http://api.weatherapi.com/v1/forecast.json"
+    params = {
+        "key": WEATHER_API_KEY,
+        "q": query_city,
+        "days": 1,
+        "aqi": "no",
+        "alerts": "no"
+    }
+    
+    try:
+        response = requests.get(url, params=params)
+        if response.status_code != 200:
+            return f"❌ Failed to get weather data for {city}. Please try again later."
+    except Exception:
+        return f"❌ Network error while fetching weather for {city}."
     
     data = response.json()
     
