@@ -13,14 +13,13 @@ sudo apt install python3 python3-pip python3-venv screen -y
 
 ## 2. Setting up the Project Folder
 
-Create a folder for the deployment and move your code into it:
+Clone your repository directly onto the server using Git:
 
 ```bash
-mkdir ~/weather_bot
-cd ~/weather_bot
+cd ~
+git clone https://github.com/WowkDigital/weather_2
+cd weather_2
 ```
-
-Upload your `main.py`, `requirements.txt`, and `.env` files here (you can use SFTP, `scp`, or clone a Git repository).
 
 ## 3. Creating a Virtual Environment
 It's highly recommended to use a virtual environment in Python:
@@ -38,14 +37,13 @@ pip install -r requirements.txt
 
 ## 4. Setting up the `.env` file
 
-Ensure your `.env` file is present in the `~/weather_bot` folder and looks like this (with your real keys):
+Since your `.env` file is likely ignored by Git (for security), you need to create it on the server. You can copy it from the template:
 
-```env
-TELEGRAM_BOT_TOKEN=your_real_telegram_bot_token_here
-WEATHER_API_KEY=your_real_weatherapi_key_here
+```bash
+cp .env.example .env
+nano .env
 ```
-
-Keep this `.env` file secure to prevent others from using your APIs.
+Inside the `nano` editor, paste your real tokens, then press `Ctrl+O` (Enter) to save and `Ctrl+X` to exit.
 
 ## 5. Running the bot using Screen
 
@@ -56,7 +54,7 @@ A tool called `screen` allows you to open a terminal session that stays alive ev
 screen -S weatherbot
 
 # Make sure you are in the directory and the environment is active
-cd ~/weather_bot
+cd ~/weather_2
 source venv/bin/activate
 
 # Run the python script
