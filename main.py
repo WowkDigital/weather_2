@@ -137,8 +137,19 @@ def generate_feelslike_chart(data: dict, city: str):
         return None
         
     all_hours = []
+    sun_events = []
     for day in forecast_days:
         all_hours.extend(day.get("hour", []))
+        date_str = day.get("date")
+        astro = day.get("astro", {})
+        if "sunrise" in astro and "sunset" in astro:
+            try:
+                sr = datetime.strptime(f"{date_str} {astro['sunrise']}", "%Y-%m-%d %I:%M %p")
+                ss = datetime.strptime(f"{date_str} {astro['sunset']}", "%Y-%m-%d %I:%M %p")
+                sun_events.append(("🌅 Wschód", sr, "#ffea00"))
+                sun_events.append(("🌇 Zachód", ss, "#ff5500"))
+            except Exception:
+                pass
     
     local_time_str = data.get("location", {}).get("localtime", "")
     try:
@@ -161,10 +172,25 @@ def generate_feelslike_chart(data: dict, city: str):
     plt.figure(figsize=(10, 5))
     plt.plot(times, temps, marker='o', linestyle='-', color='#00d2ff', linewidth=3, markersize=8)
     
+    y_min, y_max = min(temps), max(temps)
+    y_range = y_max - y_min if y_max > y_min else 1.0
+    
     # Add annotations for each point
-    for i, (time, temp) in enumerate(zip(times, temps)):
+    for i, (time_str, temp) in enumerate(zip(times, temps)):
         if i % 2 == 0: # Show every second label to avoid crowding
-            plt.annotate(f"{temp}°", (time, temp), textcoords="offset points", xytext=(0,10), ha='center', color='white', fontsize=10)
+            plt.annotate(f"{temp}°", (time_str, temp), textcoords="offset points", xytext=(0,10), ha='center', color='white', fontsize=10)
+
+    # Sun events
+    for label, dt, color in sun_events:
+        for i in range(len(relevant_hours) - 1):
+            t1 = datetime.strptime(relevant_hours[i]["time"], "%Y-%m-%d %H:%M")
+            t2 = datetime.strptime(relevant_hours[i+1]["time"], "%Y-%m-%d %H:%M")
+            if t1 <= dt <= t2:
+                fraction = (dt - t1).total_seconds() / (t2 - t1).total_seconds()
+                pos = i + fraction
+                plt.axvline(x=pos, color=color, linestyle='--', alpha=0.8, linewidth=2)
+                plt.text(pos + 0.2, y_min + y_range * 0.1, f"{label}\n{dt.strftime('%H:%M')}", color=color, fontsize=9, va='bottom')
+                break
 
     plt.title(f"Temperatura odczuwalna (24h) - {city}", fontsize=16, color='white', fontweight='bold', pad=20)
     plt.xlabel("Godzina", fontsize=12, color='white', labelpad=10)
@@ -324,8 +350,8 @@ def format_weather_message(data: dict, city: str, is_tomorrow: bool = False) -> 
         keyboard.append([InlineKeyboardButton("📅 Jutro", callback_data=f"tomorrow_{city}")])
     
     keyboard.append([
-        InlineKeyboardButton("� Wykres odczuwalnej", callback_data=f"chart_{city}"),
-        InlineKeyboardButton("�🔄 Odśwież", callback_data=f"refresh_{city}")
+        InlineKeyboardButton("📈 Wykres odczuwalnej", callback_data=f"chart_{city}"),
+        InlineKeyboardButton("🔄 Odśwież", callback_data=f"refresh_{city}")
     ])
     
     return final_msg, InlineKeyboardMarkup(keyboard)
