@@ -1,10 +1,13 @@
 import os
 import requests
 import asyncio
+import time
 from datetime import datetime
 from dotenv import load_dotenv
-from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, InputFile
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
+import matplotlib.pyplot as plt
+import io
 
 # Load env variables safely
 load_dotenv()
@@ -23,6 +26,11 @@ MOON_EMOJIS = {
     "Waning Crescent": "🌘"
 }
 
+# Caching Configuration
+CACHE_EXPIRATION_SECONDS = 900  # 15 minutes
+WEATHER_CACHE = {}  # Format: {city: {"data": data, "timestamp": timestamp}}
+CHART_CACHE = {}    # Format: {city: {"buffer": bytes, "timestamp": timestamp}}
+
 def fetch_weather_data(city: str, days: int = 1) -> dict:
     if not WEATHER_API_KEY:
         return {"error": "⚠️ Brak klucza API. Skonfiguruj zmienną WEATHER_API_KEY."}
@@ -36,6 +44,13 @@ def fetch_weather_data(city: str, days: int = 1) -> dict:
         "Łódź": "Lodz"
     }
     query_city = city_map.get(city, city)
+    
+    # Check Cache
+    current_time = time.time()
+    if city in WEATHER_CACHE:
+        cached = WEATHER_CACHE[city]
+        if current_time - cached["timestamp"] < CACHE_EXPIRATION_SECONDS:
+            return cached["data"]
     
     # Send a request to the API
     url = "http://api.weatherapi.com/v1/forecast.json"
@@ -52,7 +67,17 @@ def fetch_weather_data(city: str, days: int = 1) -> dict:
         response = requests.get(url, params=params, timeout=10)
         if response.status_code != 200:
             return {"error": f"❌ Nie udało się pobrać danych dla {city}. Upewnij się, że nazwa miasta jest poprawna."}
-        return response.json()
+        
+        data = response.json()
+        
+        # Save to cache (only if valid)
+        if "error" not in data:
+            WEATHER_CACHE[city] = {"data": data, "timestamp": time.time()}
+            # Invalidate chart cache for this city as data changed
+            if city in CHART_CACHE:
+                del CHART_CACHE[city]
+                
+        return data
     except Exception:
         return {"error": f"❌ Błąd sieci przy pobieraniu danych dla {city}."}
 
@@ -105,6 +130,68 @@ def get_uv_emoji(uv):
         if u <= 10: return "🔴"
         return "🟣"
     except: return "☀️"
+
+def generate_feelslike_chart(data: dict, city: str):
+    forecast_days = data.get("forecast", {}).get("forecastday", [])
+    if not forecast_days:
+        return None
+        
+    all_hours = []
+    for day in forecast_days:
+        all_hours.extend(day.get("hour", []))
+    
+    local_time_str = data.get("location", {}).get("localtime", "")
+    try:
+        current_time = datetime.strptime(local_time_str, "%Y-%m-%d %H:%M")
+    except:
+        current_time = datetime.now()
+        
+    relevant_hours = [h for h in all_hours if datetime.strptime(h["time"], "%Y-%m-%d %H:%M") >= current_time][:24]
+    
+    if not relevant_hours:
+        relevant_hours = all_hours[:24]
+        
+    times = []
+    temps = []
+    for h in relevant_hours:
+        time_part = h["time"].split(" ")[1]
+        times.append(time_part)
+        temps.append(h["feelslike_c"])
+        
+    plt.figure(figsize=(10, 5))
+    plt.plot(times, temps, marker='o', linestyle='-', color='#00d2ff', linewidth=3, markersize=8)
+    
+    # Add annotations for each point
+    for i, (time, temp) in enumerate(zip(times, temps)):
+        if i % 2 == 0: # Show every second label to avoid crowding
+            plt.annotate(f"{temp}°", (time, temp), textcoords="offset points", xytext=(0,10), ha='center', color='white', fontsize=10)
+
+    plt.title(f"Temperatura odczuwalna (24h) - {city}", fontsize=16, color='white', fontweight='bold', pad=20)
+    plt.xlabel("Godzina", fontsize=12, color='white', labelpad=10)
+    plt.ylabel("Temperatura (°C)", fontsize=12, color='white', labelpad=10)
+    
+    # Styling axes
+    plt.xticks(rotation=45, color='white')
+    plt.yticks(color='white')
+    plt.grid(True, linestyle='--', alpha=0.2, color='white')
+    
+    # Removing top and right spines
+    plt.gca().spines['top'].set_visible(False)
+    plt.gca().spines['right'].set_visible(False)
+    plt.gca().spines['bottom'].set_color('white')
+    plt.gca().spines['left'].set_color('white')
+    
+    # Background color
+    plt.gcf().set_facecolor('#1a1a1a')
+    plt.gca().set_facecolor('#1a1a1a')
+    
+    plt.tight_layout()
+    
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', dpi=100, facecolor='#1a1a1a')
+    buf.seek(0)
+    plt.close()
+    return buf
 
 def format_weather_message(data: dict, city: str, is_tomorrow: bool = False) -> tuple:
     if "error" in data:
@@ -235,7 +322,11 @@ def format_weather_message(data: dict, city: str, is_tomorrow: bool = False) -> 
         keyboard.append([InlineKeyboardButton("🔙 Dzisiaj", callback_data=f"today_{city}")])
     else:
         keyboard.append([InlineKeyboardButton("📅 Jutro", callback_data=f"tomorrow_{city}")])
-    keyboard.append([InlineKeyboardButton("🔄 Odśwież", callback_data=f"refresh_{city}")])
+    
+    keyboard.append([
+        InlineKeyboardButton("� Wykres odczuwalnej", callback_data=f"chart_{city}"),
+        InlineKeyboardButton("�🔄 Odśwież", callback_data=f"refresh_{city}")
+    ])
     
     return final_msg, InlineKeyboardMarkup(keyboard)
 
@@ -301,7 +392,46 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     loop = asyncio.get_event_loop()
     data = await loop.run_in_executor(None, fetch_weather_data, city, 2)
     
+    if action == "chart":
+        # Check Chart Cache
+        current_time = time.time()
+        if city in CHART_CACHE:
+            cached = CHART_CACHE[city]
+            if current_time - cached["timestamp"] < CACHE_EXPIRATION_SECONDS:
+                await query.message.reply_photo(
+                    photo=io.BytesIO(cached["buffer"]),
+                    caption=f"📈 *[Kesz] Wykres temperatury odczuwalnej (24h) dla {city}*",
+                    parse_mode="Markdown"
+                )
+                return
+
+        chart_buf = await loop.run_in_executor(None, generate_feelslike_chart, data, city)
+        if chart_buf:
+            # Save to cache
+            chart_bytes = chart_buf.getvalue()
+            CHART_CACHE[city] = {"buffer": chart_bytes, "timestamp": time.time()}
+            
+            # Reset buffer pointer for sending
+            chart_buf.seek(0)
+            await query.message.reply_photo(
+                photo=chart_buf,
+                caption=f"📈 *Wykres temperatury odczuwalnej (24h) dla {city}*",
+                parse_mode="Markdown"
+            )
+        else:
+            await query.message.reply_text("❌ Nie udało się wygenerować wykresu.")
+        return
+
     is_tomorrow = (action == "tomorrow")
+    
+    # Special case for refresh: force clearing cache for this city
+    if action == "refresh":
+        if city in WEATHER_CACHE:
+            del WEATHER_CACHE[city]
+        if city in CHART_CACHE:
+            del CHART_CACHE[city]
+        data = await loop.run_in_executor(None, fetch_weather_data, city, 2)
+
     msg, reply_markup = format_weather_message(data, city, is_tomorrow=is_tomorrow)
     
     try:
