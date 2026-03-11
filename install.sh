@@ -49,7 +49,8 @@ echo "⏳ Instalowanie zależności z requirements.txt..."
 if $VENV_PATH/bin/pip install --upgrade -r requirements.txt; then
     echo "✅ Zależności zainstalowane pomyślnie."
 else
-    echo "❌ BŁĄD: Nie udało się zainstalować zależności. Sprawdź logi powyżej."
+    echo "❌ BŁĄD: Nie udało się zainstalować zależności."
+    echo "💡 Spróbuj ręcznie: source $VENV_PATH/bin/activate && pip install python-telegram-bot[job-queue] APScheduler --upgrade"
     exit 1
 fi
 
