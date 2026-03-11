@@ -44,17 +44,29 @@ fi
 
 # 3. Dependencies
 if [ -f "requirements.txt" ]; then
-    VENV_PATH="./venv/bin/pip"
-    [ ! -f "$VENV_PATH" ] && VENV_PATH="pip"
-    
-    if $VENV_PATH install -r requirements.txt > /dev/null 2>&1; then
-        STATUS_DEPS="✅ ZAAKTUALIZOWANO"
+    # Detect pip path
+    if [ -d "venv" ]; then
+        PIP_PATH="./venv/bin/pip"
+        PYTHON_PATH="./venv/bin/python3"
+    elif [ -d ".venv" ]; then
+        PIP_PATH="./.venv/bin/pip"
+        PYTHON_PATH="./.venv/bin/python3"
     else
-        STATUS_DEPS="❌ BŁĄD PIP"
+        PIP_PATH="pip3"
+        PYTHON_PATH="python3"
+    fi
+
+    echo "⏳ Instalowanie zależności z requirements.txt..."
+    if $PIP_PATH install --upgrade -r requirements.txt > pip_error.log 2>&1; then
+        STATUS_DEPS="✅ ZAAKTUALIZOWANO"
+        rm -f pip_error.log
+    else
+        STATUS_DEPS="❌ BŁĄD PIP (sprawdź pip_error.log)"
     fi
 else
     STATUS_DEPS="➖ BRAK REQ.TXT"
 fi
+
 
 # 4. Start Bot
 if [ -d "venv" ]; then
