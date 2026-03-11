@@ -126,8 +126,9 @@ def format_weather_message(data: dict, city: str, is_tomorrow: bool = False) -> 
     else:
         keyboard.append([InlineKeyboardButton("📅 Jutro", callback_data=f"tomorrow_{city}")])
     
+    chart_callback = f"charttomorrow_{city}" if is_tomorrow else f"chart_{city}"
     keyboard.append([
-        InlineKeyboardButton("📈 Wykres 24h", callback_data=f"chart_{city}"),
+        InlineKeyboardButton("📈 Wykres 24h", callback_data=chart_callback),
         InlineKeyboardButton("🔄 Odśwież", callback_data=f"refresh_{city}")
     ])
     

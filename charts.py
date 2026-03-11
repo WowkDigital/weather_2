@@ -2,28 +2,28 @@ import io
 from datetime import datetime
 import matplotlib.pyplot as plt
 
-def generate_feelslike_chart(data: dict, city: str):
+def generate_feelslike_chart(data: dict, city: str, day_index: int = 0):
     forecast_days = data.get("forecast", {}).get("forecastday", [])
-    if not forecast_days:
+    if not forecast_days or len(forecast_days) <= day_index:
         return None
         
     all_hours = []
     sun_events = []
-    for day in forecast_days:
-        all_hours.extend(day.get("hour", []))
-        date_str = day.get("date")
-        astro = day.get("astro", {})
-        if "sunrise" in astro and "sunset" in astro:
-            try:
-                sr = datetime.strptime(f"{date_str} {astro['sunrise']}", "%Y-%m-%d %I:%M %p")
-                ss = datetime.strptime(f"{date_str} {astro['sunset']}", "%Y-%m-%d %I:%M %p")
-                sun_events.append(("Wschód", sr, "#ffea00"))
-                sun_events.append(("Zachód", ss, "#ff5500"))
-            except Exception:
-                pass
     
-    relevant_hours = forecast_days[0].get("hour", [])[:24]
-    target_date = forecast_days[0].get("date", "")
+    target_day = forecast_days[day_index]
+    relevant_hours = target_day.get("hour", [])[:24]
+    target_date = target_day.get("date", "")
+
+    # Astro for sun events
+    astro = target_day.get("astro", {})
+    if "sunrise" in astro and "sunset" in astro:
+        try:
+            sr = datetime.strptime(f"{target_date} {astro['sunrise']}", "%Y-%m-%d %I:%M %p")
+            ss = datetime.strptime(f"{target_date} {astro['sunset']}", "%Y-%m-%d %I:%M %p")
+            sun_events.append(("Wschód", sr, "#ffea00"))
+            sun_events.append(("Zachód", ss, "#ff5500"))
+        except Exception:
+            pass
         
     times = []
     temps = []

@@ -76,27 +76,30 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     loop = asyncio.get_event_loop()
     data = await loop.run_in_executor(None, fetch_weather_data, city, 2)
     
-    if action == "chart":
+    if action.startswith("chart"):
+        day_index = 1 if action == "charttomorrow" else 0
+        cache_key = f"{city}_tomorrow" if day_index == 1 else city
         current_time = time.time()
-        if city in CHART_CACHE:
-            cached = CHART_CACHE[city]
+        
+        if cache_key in CHART_CACHE:
+            cached = CHART_CACHE[cache_key]
             if current_time - cached["timestamp"] < CACHE_EXPIRATION_SECONDS:
                 await query.message.reply_photo(
                     photo=io.BytesIO(cached["buffer"]),
-                    caption=f"📈 *Wykres pogodowy (24h) dla {city}*",
+                    caption=f"📈 *Wykres pogodowy (24h) dla {city}{' (Jutro)' if day_index == 1 else ''}*",
                     parse_mode="Markdown"
                 )
                 return
 
-        chart_buf = await loop.run_in_executor(None, generate_feelslike_chart, data, city)
+        chart_buf = await loop.run_in_executor(None, generate_feelslike_chart, data, city, day_index)
         if chart_buf:
             chart_bytes = chart_buf.getvalue()
-            CHART_CACHE[city] = {"buffer": chart_bytes, "timestamp": time.time()}
+            CHART_CACHE[cache_key] = {"buffer": chart_bytes, "timestamp": time.time()}
             
             chart_buf.seek(0)
             await query.message.reply_photo(
                 photo=chart_buf,
-                caption=f"📈 *Wykres pogodowy (24h) dla {city}*",
+                caption=f"📈 *Wykres pogodowy (24h) dla {city}{' (Jutro)' if day_index == 1 else ''}*",
                 parse_mode="Markdown"
             )
         else:
