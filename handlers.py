@@ -1,10 +1,11 @@
 import io
 import time
 import asyncio
+import random
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ContextTypes
 
-from config import CACHE_EXPIRATION_SECONDS
+from config import CACHE_EXPIRATION_SECONDS, WEATHER_STICKERS
 from cache import CHART_CACHE, invalidate_caches
 from weather_api import fetch_weather_data
 from charts import generate_feelslike_chart
@@ -152,7 +153,20 @@ async def unsubscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+    
+    # Wyślij tekstową odpowiedź
     await update.message.reply_text(get_sticker_message(), parse_mode="Markdown")
+    
+    # Wyślij losową naklejkę pogodową
+    if WEATHER_STICKERS:
+        try:
+            await context.bot.send_sticker(
+                chat_id=update.effective_chat.id,
+                sticker=random.choice(WEATHER_STICKERS)
+            )
+        except Exception:
+            # Ups, ID naklejki może być niepoprawne lub wygasło
+            pass
 
 async def handle_unsupported(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")

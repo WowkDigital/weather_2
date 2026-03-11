@@ -37,10 +37,10 @@ def main():
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     
     # Naklejki
-    application.add_handler(MessageHandler(filters.STICKER, handle_sticker))
+    application.add_handler(MessageHandler(filters.Sticker.ALL, handle_sticker))
     
     # Inne (np. zdjęcia, pliki) - podajmy przyjazny komunikat o nieobsługiwanym formacie
-    application.add_handler(MessageHandler(filters.ALL & ~filters.TEXT & ~filters.LOCATION & ~filters.STICKER & ~filters.COMMAND, handle_unsupported))
+    application.add_handler(MessageHandler(filters.ALL & ~filters.TEXT & ~filters.LOCATION & ~filters.Sticker.ALL & ~filters.COMMAND, handle_unsupported))
     
     application.add_handler(MessageHandler(filters.LOCATION, handle_location))
     application.add_handler(CallbackQueryHandler(button_callback))
