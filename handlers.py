@@ -83,7 +83,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if current_time - cached["timestamp"] < CACHE_EXPIRATION_SECONDS:
                 await query.message.reply_photo(
                     photo=io.BytesIO(cached["buffer"]),
-                    caption=f"📈 *[Kesz] Wykres temperatury odczuwalnej (24h) dla {city}*",
+                    caption=f"📈 *Wykres pogodowy (24h) dla {city}*",
                     parse_mode="Markdown"
                 )
                 return
@@ -96,7 +96,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chart_buf.seek(0)
             await query.message.reply_photo(
                 photo=chart_buf,
-                caption=f"📈 *Wykres temperatury odczuwalnej (24h) dla {city}*",
+                caption=f"📈 *Wykres pogodowy (24h) dla {city}*",
                 parse_mode="Markdown"
             )
         else:
