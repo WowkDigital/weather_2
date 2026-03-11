@@ -15,8 +15,7 @@ from subscriptions import save_subscription, remove_subscription, load_subscript
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [KeyboardButton("📍 Wyślij moją lokalizację", request_location=True)],
-        [KeyboardButton("Wrocław"), KeyboardButton("Warszawa")],
-        [KeyboardButton("Kraków"), KeyboardButton("Gdańsk")]
+        [KeyboardButton("Wrocław"), KeyboardButton("Warszawa")]
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     await update.message.reply_text(
@@ -26,8 +25,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "2️⃣ Użyj przycisków na dole ekranu\n"
         "3️⃣ Prześlij swoją lokalizację z użyciem GPS\n\n"
         "🔔 *Subskrypcja:*\n"
-        "Użyj komendy `/sub NazwaMiasta`, aby otrzymywać prognozę codziennie o 7:00!\n"
-        "Użyj `/unsub`, aby zrezygnować.",
+        "Możesz wpisać `/sub Miasto` lub po prostu sprawdzić pogodę i kliknąć przycisk *Subskrybuj* pod wynikami!",
         reply_markup=reply_markup,
         parse_mode="Markdown"
     )
@@ -103,6 +101,11 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         else:
             await query.message.reply_text("❌ Nie udało się wygenerować wykresu.")
+        return
+
+    if action == "sub":
+        save_subscription(query.message.chat_id, city)
+        await query.message.reply_text(f"✅ Subskrypcja aktywna! Prognoza dla *{city}* będzie wysyłana codziennie o 7:00.", parse_mode="Markdown")
         return
 
     is_tomorrow = (action == "tomorrow")

@@ -131,4 +131,8 @@ def format_weather_message(data: dict, city: str, is_tomorrow: bool = False) -> 
         InlineKeyboardButton("🔄 Odśwież", callback_data=f"refresh_{city}")
     ])
     
+    keyboard.append([
+        InlineKeyboardButton("🔔 Subskrybuj prognozę o 7:00", callback_data=f"sub_{city}")
+    ])
+    
     return final_msg, InlineKeyboardMarkup(keyboard)
