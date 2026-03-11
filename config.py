@@ -21,8 +21,9 @@ CACHE_EXPIRATION_SECONDS = 900  # 15 minutes
 
 # Naklejki pogodowe (używamy publicznych i sprawdzonych ID)
 WEATHER_STICKERS = [
-    "CAACAgIAAxkBAAEL_m9mIFGZ9-G9X2_3p6S3S7uYn_Q", # Sun
-    "CAACAgIAAxkBAAEL_m1mIFGNo6_7S2-Uu7_n_S_U",    # Cloud
-    "CAACAgIAAxkBAAEL_mtmIFF8G9-G9X2_3p6S3S7uYn_Q", # Rain
-    "CAACAgIAAxkBAAEL_mlmIFFoG9-G9X2_3p6S3S7uYn_Q"  # Storm
+    "CAACAgQAAxkBAAFEiEhpse1isLmD22KWsoX5Sqv8eR_nVwAC9xcAAiKWKVNtiuPkDDMfJToE", # Sun
+    "CAACAgQAAxkBAAFEiEhpse1isLmD22KWsoX5Sqv8eR_nVwAC9xcAAiKWKVNtiuPkDDMfJToE",    # Cloud
+    "CAACAgQAAxkBAAFEiEhpse1isLmD22KWsoX5Sqv8eR_nVwAC9xcAAiKWKVNtiuPkDDMfJToE", # Rain
+    "CAACAgQAAxkBAAFEiEhpse1isLmD22KWsoX5Sqv8eR_nVwAC9xcAAiKWKVNtiuPkDDMfJToE"  # Storm
+    
 ]
