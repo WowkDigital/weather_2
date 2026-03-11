@@ -17,21 +17,13 @@ def generate_feelslike_chart(data: dict, city: str):
             try:
                 sr = datetime.strptime(f"{date_str} {astro['sunrise']}", "%Y-%m-%d %I:%M %p")
                 ss = datetime.strptime(f"{date_str} {astro['sunset']}", "%Y-%m-%d %I:%M %p")
-                sun_events.append(("🌅 Wschód", sr, "#ffea00"))
-                sun_events.append(("🌇 Zachód", ss, "#ff5500"))
+                sun_events.append(("Wschód", sr, "#ffea00"))
+                sun_events.append(("Zachód", ss, "#ff5500"))
             except Exception:
                 pass
     
-    local_time_str = data.get("location", {}).get("localtime", "")
-    try:
-        current_time = datetime.strptime(local_time_str, "%Y-%m-%d %H:%M")
-    except:
-        current_time = datetime.now()
-        
-    relevant_hours = [h for h in all_hours if datetime.strptime(h["time"], "%Y-%m-%d %H:%M") >= current_time][:24]
-    
-    if not relevant_hours:
-        relevant_hours = all_hours[:24]
+    relevant_hours = forecast_days[0].get("hour", [])[:24]
+    target_date = forecast_days[0].get("date", "")
         
     times = []
     temps = []
@@ -61,7 +53,7 @@ def generate_feelslike_chart(data: dict, city: str):
                 plt.text(pos + 0.2, y_min + y_range * 0.1, f"{label}\n{dt.strftime('%H:%M')}", color=color, fontsize=9, va='bottom')
                 break
 
-    plt.title(f"Temperatura odczuwalna (24h) - {city}", fontsize=16, color='white', fontweight='bold', pad=20)
+    plt.title(f"Temperatura odczuwalna w dniu {target_date} - {city}", fontsize=16, color='white', fontweight='bold', pad=20)
     plt.xlabel("Godzina", fontsize=12, color='white', labelpad=10)
     plt.ylabel("Temperatura (°C)", fontsize=12, color='white', labelpad=10)
     
