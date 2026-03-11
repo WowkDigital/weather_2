@@ -45,6 +45,12 @@ fi
 
 # 3. Dependencies
 if [ -f "requirements.txt" ]; then
+    # Ensure venv exists
+    if [ ! -d "venv" ] && [ ! -d ".venv" ]; then
+        echo "⚠️ Nie znaleziono środowiska wirtualnego. Tworzę 'venv'..."
+        python3 -m venv venv > /dev/null 2>&1
+    fi
+
     # Detect pip path
     if [ -d "venv" ]; then
         PIP_PATH="./venv/bin/pip"
@@ -53,8 +59,10 @@ if [ -f "requirements.txt" ]; then
         PIP_PATH="./.venv/bin/pip"
         PYTHON_PATH="./.venv/bin/python3"
     else
+        # Fallback to system pip and hope for the best, but show warning
         PIP_PATH="pip3"
         PYTHON_PATH="python3"
+        echo "⚠️ UWAGA: Używam systemowego pip3 (brak venv). Może wystąpić błąd PEP 668."
     fi
 
     echo "⏳ Instalowanie zależności z requirements.txt..."
@@ -63,10 +71,15 @@ if [ -f "requirements.txt" ]; then
         rm -f pip_error.log
     else
         STATUS_DEPS="❌ BŁĄD PIP (sprawdź pip_error.log)"
+        # Suggest fix for PEP 668 if visible in log
+        if grep -q "externally-managed-environment" pip_error.log; then
+             STATUS_DEPS="❌ BŁĄD (PEP 668 - spróbuj: python3 -m venv venv)"
+        fi
     fi
 else
     STATUS_DEPS="➖ BRAK REQ.TXT"
 fi
+
 
 
 # 4. Start Bot
