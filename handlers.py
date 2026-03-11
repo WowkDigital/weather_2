@@ -9,6 +9,8 @@ from cache import CHART_CACHE, invalidate_caches
 from weather_api import fetch_weather_data
 from charts import generate_feelslike_chart
 from messages import format_weather_message
+from subscriptions import save_subscription, remove_subscription, load_subscriptions
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
@@ -22,10 +24,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Możesz u mnie sprawdzić pogodę na kilka sposobów:\n"
         "1️⃣ Wpisz z klawiatury nazwę *dowolnego miasta* (np. Paryż, Radom)\n"
         "2️⃣ Użyj przycisków na dole ekranu\n"
-        "3️⃣ Prześlij swoją lokalizację z użyciem GPS",
+        "3️⃣ Prześlij swoją lokalizację z użyciem GPS\n\n"
+        "🔔 *Subskrypcja:*\n"
+        "Użyj komendy `/sub NazwaMiasta`, aby otrzymywać prognozę codziennie o 7:00!\n"
+        "Użyj `/unsub`, aby zrezygnować.",
         reply_markup=reply_markup,
         parse_mode="Markdown"
     )
+
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
@@ -111,3 +117,19 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(text=msg, reply_markup=reply_markup, parse_mode="Markdown")
     except Exception:
         pass
+
+async def subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        await update.message.reply_text("❌ Podaj nazwę miasta, np.: `/sub Wrocław`", parse_mode="Markdown")
+        return
+    
+    city = " ".join(context.args)
+    save_subscription(update.effective_chat.id, city)
+    await update.message.reply_text(f"✅ Będę Ci wysyłać prognozę dla *{city}* codziennie o 7:00!", parse_mode="Markdown")
+
+async def unsubscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if remove_subscription(update.effective_chat.id):
+        await update.message.reply_text("🔕 Subskrypcja została anulowana.")
+    else:
+        await update.message.reply_text("ℹ️ Nie masz aktywnej subskrypcji.")
+
