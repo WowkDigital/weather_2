@@ -137,3 +137,27 @@ def format_weather_message(data: dict, city: str, is_tomorrow: bool = False) -> 
     ])
     
     return final_msg, InlineKeyboardMarkup(keyboard)
+
+def get_help_message() -> str:
+    return (
+        "❓ *Jak korzystać z bota?*\n\n"
+        "📍 *Miasto:* Wpisz nazwę dowolnego miasta (np. `Warszawa`), aby sprawdzić aktualną pogodę.\n"
+        "🗺️ *Lokalizacja:* Wyślij swoją lokalizację GPS przyciskiem poniżej.\n"
+        "🔔 *Subskrypcja:* Wpisz `/sub Miasto`, aby otrzymywać prognozę codziennie o 7:00.\n"
+        "📈 *Wykresy:* Po wyszukaniu miasta kliknij przycisk 'Wykres 24h'.\n\n"
+        "🤖 Jestem tutaj, aby pomóc Ci zaplanować dzień!"
+    )
+
+def get_sticker_message() -> str:
+    return (
+        "Fajna naklejka! 😍 Niestety nie umiem ich jeszcze interpretować, "
+        "ale za to świetnie znam się na pogodzie.\n\n"
+        "Wpisz nazwę miasta lub wyślij lokalizację, aby sprawdzić prognozę! 🌤️"
+    )
+
+def get_unknown_command_message() -> str:
+    return (
+        "🤖 *Ups! Nie znam tej komendy.*\n\n"
+        "Wpisz /start, aby zobaczyć główne menu, lub po prostu podaj nazwę miasta, "
+        "dla którego chcesz sprawdzić pogodę."
+    )

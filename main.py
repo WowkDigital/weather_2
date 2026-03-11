@@ -1,6 +1,10 @@
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters
 from config import TELEGRAM_TOKEN
-from handlers import start, handle_message, handle_location, button_callback, subscribe, unsubscribe
+from handlers import (
+    start, handle_message, handle_location, button_callback, 
+    subscribe, unsubscribe, help_command, handle_sticker, 
+    handle_unknown_command, handle_unsupported
+)
 from tasks import send_daily_weather
 from datetime import time
 import pytz
@@ -20,11 +24,24 @@ def main():
 
     
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("sub", subscribe))
     application.add_handler(CommandHandler("subscribe", subscribe))
     application.add_handler(CommandHandler("unsub", unsubscribe))
     application.add_handler(CommandHandler("unsubscribe", unsubscribe))
+    
+    # Obsługa nieznanych komend
+    application.add_handler(MessageHandler(filters.COMMAND, handle_unknown_command))
+    
+    # Tekst (miasta) - obsługa po komendach
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    
+    # Naklejki
+    application.add_handler(MessageHandler(filters.STICKER, handle_sticker))
+    
+    # Inne (np. zdjęcia, pliki) - podajmy przyjazny komunikat o nieobsługiwanym formacie
+    application.add_handler(MessageHandler(filters.ALL & ~filters.TEXT & ~filters.LOCATION & ~filters.STICKER & ~filters.COMMAND, handle_unsupported))
+    
     application.add_handler(MessageHandler(filters.LOCATION, handle_location))
     application.add_handler(CallbackQueryHandler(button_callback))
     

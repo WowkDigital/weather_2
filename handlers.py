@@ -8,7 +8,7 @@ from config import CACHE_EXPIRATION_SECONDS
 from cache import CHART_CACHE, invalidate_caches
 from weather_api import fetch_weather_data
 from charts import generate_feelslike_chart
-from messages import format_weather_message
+from messages import format_weather_message, get_help_message, get_sticker_message, get_unknown_command_message
 from subscriptions import save_subscription, remove_subscription, load_subscriptions
 
 
@@ -36,6 +36,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not text:
         return
         
+    # Szybkie sprawdzenie czy to powitanie
+    greetings = ["cześć", "czesc", "hej", "siema", "hello", "hi", "dzień dobry", "dzien dobry"]
+    if text.lower().strip() in greetings:
+        await update.message.reply_text(
+            f"👋 Hej! Miło Cię widzieć. Chcesz sprawdzić pogodę? \n\n"
+            "Wpisz nazwę miasta (np. 'Berlin') lub wyślij mi swoją lokalizację! 📍",
+            parse_mode="Markdown"
+        )
+        return
+
+    await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
     loading_msg = await update.message.reply_text(f"⏳ Sprawdzam pogodę dla: {text}...")
     
     loop = asyncio.get_event_loop()
@@ -138,4 +149,24 @@ async def unsubscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("🔕 Subskrypcja została anulowana.")
     else:
         await update.message.reply_text("ℹ️ Nie masz aktywnej subskrypcji.")
+
+async def handle_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+    await update.message.reply_text(get_sticker_message(), parse_mode="Markdown")
+
+async def handle_unsupported(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+    await update.message.reply_text(
+        "🤔 Wygląda na to, że wysłałeś coś, czego jeszcze nie potrafię przetworzyć.\n\n"
+        "Skupiam się na sprawdzaniu pogody! Wpisz nazwę miasta, aby zacząć. 🌤️",
+        parse_mode="Markdown"
+    )
+
+async def handle_unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+    await update.message.reply_text(get_unknown_command_message(), parse_mode="Markdown")
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+    await update.message.reply_text(get_help_message(), parse_mode="Markdown")
 

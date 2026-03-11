@@ -35,7 +35,12 @@ def fetch_weather_data(city: str, days: int = 1) -> dict:
     try:
         response = requests.get(url, params=params, timeout=10)
         if response.status_code != 200:
-            return {"error": f"❌ Nie udało się pobrać danych dla {city}. Upewnij się, że nazwa miasta jest poprawna."}
+            return {"error": (
+                f"❌ Przykro mi, nie udało się pobrać danych dla *{city}*.\n\n"
+                "💡 *Podpowiedź:* Upewnij się, że nazwa miasta jest poprawna (np. Wrocław, Tokio). "
+                "Jeśli szukasz miasta za granicą, wpisz jego nazwę po polsku lub angielsku.\n\n"
+                "Wpisz `/help`, aby zobaczyć jak jeszcze mogę Ci pomóc!"
+            )}
         
         data = response.json()
         
