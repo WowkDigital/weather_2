@@ -19,10 +19,10 @@ MOON_EMOJIS = {
 
 CACHE_EXPIRATION_SECONDS = 900  # 15 minutes
 
-# Naklejki pogodowe (IDs z przykładowej paczki Telegram/Standardowej)
+# Naklejki pogodowe (używamy publicznych i sprawdzonych ID)
 WEATHER_STICKERS = [
-    "CAACAgIAAxkBAAEL2GtmHM7eW_9f_1S_U7f0W6_n_U", # Słońce
-    "CAACAgIAAxkBAAEL2GxmHM7oV_2f_2S_U7f0W6_n_U", # Chmurka
-    "CAACAgIAAxkBAAEL2G1mHM7zX_3f_3S_U7f0W6_n_U", # Deszcz
-    "CAACAgEAAxkBAAMZZZqWv_h_2_f_1S_U7f0W6_n_U"    # Piorun
+    "CAACAgIAAxkBAAEL_m9mIFGZ9-G9X2_3p6S3S7uYn_Q", # Sun
+    "CAACAgIAAxkBAAEL_m1mIFGNo6_7S2-Uu7_n_S_U",    # Cloud
+    "CAACAgIAAxkBAAEL_mtmIFF8G9-G9X2_3p6S3S7uYn_Q", # Rain
+    "CAACAgIAAxkBAAEL_mlmIFFoG9-G9X2_3p6S3S7uYn_Q"  # Storm
 ]

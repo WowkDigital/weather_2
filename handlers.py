@@ -164,7 +164,8 @@ async def handle_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 chat_id=update.effective_chat.id,
                 sticker=random.choice(WEATHER_STICKERS)
             )
-        except Exception:
+        except Exception as e:
+            print(f"⚠️ Błąd podczas wysyłania naklejki: {e}")
             # Ups, ID naklejki może być niepoprawne lub wygasło
             pass
 
