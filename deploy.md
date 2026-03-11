@@ -19,21 +19,16 @@ Clone your repository directly onto the server using Git:
 cd ~
 git clone https://github.com/WowkDigital/weather_2
 cd weather_2
+chmod +x install.sh update_bot.sh
+./install.sh
 ```
 
-## 3. Creating a Virtual Environment
-It's highly recommended to use a virtual environment in Python:
-
-```bash
-# Create the virtual environment
-python3 -m venv venv
-
-# Activate it
-source venv/bin/activate
-
-# Install the dependencies
-pip install -r requirements.txt
-```
+The `install.sh` script will:
+- Check for system dependencies.
+- Create a virtual environment (`venv`).
+- Install Python dependencies.
+- Help you configure the `.env` file.
+- Offer to start the bot.
 
 ## 4. Setting up the `.env` file
 
