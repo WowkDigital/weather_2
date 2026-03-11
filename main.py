@@ -11,7 +11,13 @@ def main():
         print("❌ Błąd: Brak TELEGRAM_BOT_TOKEN w środowisku (lub .env).")
         return
         
-    application = Application.builder().token(TELEGRAM_TOKEN).build()
+    try:
+        application = Application.builder().token(TELEGRAM_TOKEN).build()
+    except Exception as e:
+        print(f"❌ Krytyczny błąd podczas inicjalizacji bota: {e}")
+        print("💡 Sugestia: Spróbuj zainstalować: 'pip install python-telegram-bot[job-queue] APScheduler' --upgrade")
+        return
+
     
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("sub", subscribe))

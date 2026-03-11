@@ -39,8 +39,9 @@ if [ $GIT_EXIT -eq 0 ]; then
     fi
 else
     STATUS_GIT="❌ BŁĄD GIT"
-    COMMIT_INFO="⚠️ Błąd: $(echo "$GIT_OUT" | head -n 1)"
+    COMMIT_INFO="⚠️ Błąd: $(echo "$GIT_OUT" | head -n 5 | tr '\n' ' ')"
 fi
+
 
 # 3. Dependencies
 if [ -f "requirements.txt" ]; then
@@ -71,10 +72,20 @@ fi
 # 4. Start Bot
 if [ -d "venv" ]; then
     screen -dmS "$SESSION_NAME" bash -c "source venv/bin/activate && python3 $BOT_FILE"
+elif [ -d ".venv" ]; then
+    screen -dmS "$SESSION_NAME" bash -c "source .venv/bin/activate && python3 $BOT_FILE"
 else
     screen -dmS "$SESSION_NAME" python3 $BOT_FILE
 fi
-STATUS_START="✅ URUCHOMIONO"
+
+# Wait a moment and check if still running
+sleep 2
+if screen -list | grep -q "$SESSION_NAME"; then
+    STATUS_START="✅ URUCHOMIONO"
+else
+    STATUS_START="❌ CRASH (zobacz screen -r lub logi)"
+fi
+
 
 # Calculation of time
 ELAPSED_TIME=$(( SECONDS - START_TIME ))
