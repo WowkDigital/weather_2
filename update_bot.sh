@@ -83,12 +83,13 @@ fi
 
 
 # 4. Start Bot
+LOG_FILE="bot.log"
 if [ -d "venv" ]; then
-    screen -dmS "$SESSION_NAME" bash -c "source venv/bin/activate && python3 $BOT_FILE"
+    screen -dmS "$SESSION_NAME" bash -c "source venv/bin/activate && python3 $BOT_FILE > $LOG_FILE 2>&1"
 elif [ -d ".venv" ]; then
-    screen -dmS "$SESSION_NAME" bash -c "source .venv/bin/activate && python3 $BOT_FILE"
+    screen -dmS "$SESSION_NAME" bash -c "source .venv/bin/activate && python3 $BOT_FILE > $LOG_FILE 2>&1"
 else
-    screen -dmS "$SESSION_NAME" python3 $BOT_FILE
+    screen -dmS "$SESSION_NAME" bash -c "python3 $BOT_FILE > $LOG_FILE 2>&1"
 fi
 
 # Wait a moment and check if still running
@@ -103,10 +104,10 @@ fi
 # Calculation of time
 ELAPSED_TIME=$(( SECONDS - START_TIME ))
 
-echo " [1/4] Sesja screen:     $STATUS_STOP"
+echo " [1/4] Zatrzymanie bota:  $STATUS_STOP"
 echo " [2/4] Kod (Git):        $STATUS_GIT"
 echo " [3/4] Zależności:       $STATUS_DEPS"
-echo " [4/4] Status bota:      $STATUS_START"
+echo " [4/4] Start nowej sesji: $STATUS_START"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo " $COMMIT_INFO"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
