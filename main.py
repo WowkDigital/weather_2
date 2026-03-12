@@ -1,4 +1,5 @@
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters
+from telegram.request import HTTPXRequest
 from bot.core.config import TELEGRAM_TOKEN
 from bot.handlers import (
     start, handle_message, handle_location, button_callback, 
@@ -16,7 +17,9 @@ def main():
         return
         
     try:
-        application = Application.builder().token(TELEGRAM_TOKEN).build()
+        # Configure network timeouts for reliability
+        request = HTTPXRequest(connect_timeout=30, read_timeout=30)
+        application = Application.builder().token(TELEGRAM_TOKEN).request(request).build()
     except Exception as e:
         print(f"❌ Critical error during bot initialization: {e}")
         print("💡 Suggestion: Try installing: 'pip install python-telegram-bot[job-queue] APScheduler' --upgrade")
@@ -60,12 +63,7 @@ def main():
         print("⚠️ Warning: JobQueue is not available. Daily forecasts won't work.")
 
     print("Bot started... (Press Ctrl+C to stop)")
-    application.run_polling(
-        read_timeout=30,
-        write_timeout=30,
-        connect_timeout=30,
-        pool_timeout=30
-    )
+    application.run_polling(timeout=30)
 
 if __name__ == "__main__":
     main()
