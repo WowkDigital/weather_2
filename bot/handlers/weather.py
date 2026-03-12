@@ -10,6 +10,7 @@ from bot.services.weather import fetch_weather_data
 from bot.services.charts import generate_feelslike_chart
 from bot.core.messages import format_weather_message
 from bot.core.subscriptions import save_subscription
+from bot.services.sounds import send_weather_sound, send_event_sound
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
@@ -39,6 +40,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception:
         await loading_msg.edit_text(msg, parse_mode="Markdown")
 
+    # 🔊 Send weather sound effect if condition matches
+    condition = data.get("current", {}).get("condition", {}).get("text", "")
+    if condition:
+        await send_weather_sound(context.bot, update.effective_chat.id, condition)
+
 async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lat = update.message.location.latitude
     lon = update.message.location.longitude
@@ -56,6 +62,11 @@ async def handle_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await loading_msg.edit_text(msg, reply_markup=reply_markup, parse_mode="Markdown")
     except Exception:
         await loading_msg.edit_text(msg, parse_mode="Markdown")
+
+    # 🔊 Send weather sound effect if condition matches
+    condition = data.get("current", {}).get("condition", {}).get("text", "")
+    if condition:
+        await send_weather_sound(context.bot, query.message.chat_id, condition)
 
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -100,6 +111,8 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if action == "sub":
         save_subscription(query.message.chat_id, city)
         await query.message.reply_text(f"✅ Subscription active! Forecast for *{city}* will be sent daily at 7:00 AM.", parse_mode="Markdown")
+        # 🔔 Confirmation sound for successful subscription
+        await send_event_sound(context.bot, query.message.chat_id, "subscribe")
         return
 
     is_tomorrow = (action == "tomorrow")
