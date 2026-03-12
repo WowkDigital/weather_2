@@ -1,7 +1,7 @@
 import json
 import os
 
-SUBSCRIPTIONS_FILE = os.path.join(os.path.dirname(__file__), "subscriptions.json")
+SUBSCRIPTIONS_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "subscriptions.json")
 
 def load_subscriptions():
     if not os.path.exists(SUBSCRIPTIONS_FILE):

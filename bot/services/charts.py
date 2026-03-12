@@ -20,8 +20,8 @@ def generate_feelslike_chart(data: dict, city: str, day_index: int = 0):
         try:
             sr = datetime.strptime(f"{target_date} {astro['sunrise']}", "%Y-%m-%d %I:%M %p")
             ss = datetime.strptime(f"{target_date} {astro['sunset']}", "%Y-%m-%d %I:%M %p")
-            sun_events.append(("Wschód", sr, "#ffea00"))
-            sun_events.append(("Zachód", ss, "#ff5500"))
+            sun_events.append(("Sunrise", sr, "#ffea00"))
+            sun_events.append(("Sunset", ss, "#ff5500"))
         except Exception:
             pass
         
@@ -36,23 +36,25 @@ def generate_feelslike_chart(data: dict, city: str, day_index: int = 0):
         
     fig, ax1 = plt.subplots(figsize=(12, 6))
     
-    # Opady (słupki) - tylko jeśli są prognozowane
+    # Precipitation (bars) - only if forecasted
     has_precip = any(p > 0 for p in precips)
     if has_precip:
         ax2 = ax1.twinx()
-        ax2.bar(times, precips, color='#0078ff', alpha=0.4, label='Opady (mm)', width=0.6)
-        ax2.set_ylabel('Opady (mm)', color='#0078ff', fontsize=12, labelpad=10)
+        ax2.bar(times, precips, color='#0078ff', alpha=0.4, label='Precipitation (mm)', width=0.6)
+        ax2.set_ylabel('Precipitation (mm)', color='#0078ff', fontsize=12, labelpad=10)
         ax2.tick_params(axis='y', labelcolor='#0078ff')
         ax2.grid(False)
-        # Skalowanie osi opadów, aby słupki nie zasłaniały całkowicie wykresu temperatury
+        
+        # Scaling precipitation axis so bars don't overlap temperature line too much
         max_precip = max(precips)
         ax2.set_ylim(0, max_precip * 3 if max_precip > 0 else 1)
-        # Dodanie etykiet nad słupkami jeśli opad jest istotny
+        
+        # Add labels over bars if significant
         for i, p in enumerate(precips):
             if p > 0.1:
                 ax2.text(i, p + 0.05, f"{p}", ha='center', va='bottom', color='#0078ff', fontsize=8, fontweight='bold')
 
-    # Temperatura (linia)
+    # Temperature (line)
     ax1.plot(times, temps, marker='o', linestyle='-', color='#00d2ff', linewidth=3, markersize=8, zorder=10)
     
     y_min, y_max = min(temps), max(temps)
@@ -62,7 +64,7 @@ def generate_feelslike_chart(data: dict, city: str, day_index: int = 0):
         if i % 2 == 0:
             ax1.annotate(f"{temp}°", (time_str, temp), textcoords="offset points", xytext=(0,10), ha='center', color='white', fontsize=10, fontweight='bold')
 
-    # Zdarzenia słoneczne
+    # Solar events
     for label, dt, color in sun_events:
         for i in range(len(relevant_hours) - 1):
             t1 = datetime.strptime(relevant_hours[i]["time"], "%Y-%m-%d %H:%M")
@@ -74,10 +76,10 @@ def generate_feelslike_chart(data: dict, city: str, day_index: int = 0):
                 ax1.text(pos + 0.2, y_min + y_range * 0.1, f"{label}\n{dt.strftime('%H:%M')}", color=color, fontsize=9, va='bottom', fontweight='bold')
                 break
 
-    chart_title = f"Prognoza 24h: {city} ({target_date})"
+    chart_title = f"24h Forecast: {city} ({target_date})"
     ax1.set_title(chart_title, fontsize=16, color='white', fontweight='bold', pad=25)
-    ax1.set_xlabel("Godzina", fontsize=12, color='white', labelpad=10)
-    ax1.set_ylabel("Temperatura odczuwalna (°C)", fontsize=12, color='white', labelpad=10)
+    ax1.set_xlabel("Hour", fontsize=12, color='white', labelpad=10)
+    ax1.set_ylabel("Feels Like Temp (°C)", fontsize=12, color='white', labelpad=10)
     
     ax1.set_xticks(range(len(times)))
     ax1.set_xticklabels(times, rotation=45, color='white')

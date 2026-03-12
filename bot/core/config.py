@@ -19,11 +19,10 @@ MOON_EMOJIS = {
 
 CACHE_EXPIRATION_SECONDS = 900  # 15 minutes
 
-# Naklejki pogodowe (używamy publicznych i sprawdzonych ID)
+# Weather stickers (using verified public IDs)
 WEATHER_STICKERS = [
     "CAACAgQAAxkBAAFEiEhpse1isLmD22KWsoX5Sqv8eR_nVwAC9xcAAiKWKVNtiuPkDDMfJToE", # Sun
-    "CAACAgQAAxkBAAFEiEhpse1isLmD22KWsoX5Sqv8eR_nVwAC9xcAAiKWKVNtiuPkDDMfJToE",    # Cloud
+    "CAACAgQAAxkBAAFEiEhpse1isLmD22KWsoX5Sqv8eR_nVwAC9xcAAiKWKVNtiuPkDDMfJToE", # Cloud
     "CAACAgQAAxkBAAFEiEhpse1isLmD22KWsoX5Sqv8eR_nVwAC9xcAAiKWKVNtiuPkDDMfJToE", # Rain
     "CAACAgQAAxkBAAFEiEhpse1isLmD22KWsoX5Sqv8eR_nVwAC9xcAAiKWKVNtiuPkDDMfJToE"  # Storm
-    
 ]

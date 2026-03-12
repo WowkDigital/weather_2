@@ -7,7 +7,7 @@ START_TIME=$SECONDS
 
 clear
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "        🚀 AKTUALIZACJA WEATHER BOT"
+echo "        🚀 UPDATING WEATHER BOT"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # 1. Start: Anchor to script directory
@@ -16,9 +16,9 @@ cd "$(dirname "$0")"
 # 1.1 Stop Bot
 if screen -list | grep -q "$SESSION_NAME"; then
     screen -S "$SESSION_NAME" -X quit > /dev/null 2>&1
-    STATUS_STOP="✅ ZATRZYMANO"
+    STATUS_STOP="✅ STOPPED"
 else
-    STATUS_STOP="ℹ️ NIE URUCHOMIONY"
+    STATUS_STOP="ℹ️ NOT RUNNING"
 fi
 
 # 2. Git Pull
@@ -31,15 +31,15 @@ if [ $GIT_EXIT -eq 0 ]; then
     COMMIT_MSG=$(git log -1 --format="%s" 2>/dev/null || echo "N/A")
     
     if [ "$PRE_COMMIT" != "$POST_COMMIT" ]; then
-        STATUS_GIT="✅ POBRANO ($POST_COMMIT)"
-        COMMIT_INFO="🆕 Nowy commit: $POST_COMMIT - $COMMIT_MSG"
+        STATUS_GIT="✅ DOWNLOADED ($POST_COMMIT)"
+        COMMIT_INFO="🆕 New commit: $POST_COMMIT - $COMMIT_MSG"
     else
-        STATUS_GIT="✅ AKTUALNY"
-        COMMIT_INFO="ℹ️ Już aktualny: $POST_COMMIT - $COMMIT_MSG"
+        STATUS_GIT="✅ UP TO DATE"
+        COMMIT_INFO="ℹ️ Already up to date: $POST_COMMIT - $COMMIT_MSG"
     fi
 else
-    STATUS_GIT="❌ BŁĄD GIT"
-    COMMIT_INFO="⚠️ Błąd: $(echo "$GIT_OUT" | head -n 5 | tr '\n' ' ')"
+    STATUS_GIT="❌ GIT ERROR"
+    COMMIT_INFO="⚠️ Error: $(echo "$GIT_OUT" | head -n 5 | tr '\n' ' ')"
 fi
 
 
@@ -47,7 +47,7 @@ fi
 if [ -f "requirements.txt" ]; then
     # Ensure venv exists
     if [ ! -d "venv" ] && [ ! -d ".venv" ]; then
-        echo "⚠️ Nie znaleziono środowiska wirtualnego. Tworzę 'venv'..."
+        echo "⚠️ Virtual environment not found. Creating 'venv'..."
         python3 -m venv venv > /dev/null 2>&1
     fi
 
@@ -62,22 +62,22 @@ if [ -f "requirements.txt" ]; then
         # Fallback to system pip and hope for the best, but show warning
         PIP_PATH="pip3"
         PYTHON_PATH="python3"
-        echo "⚠️ UWAGA: Używam systemowego pip3 (brak venv). Może wystąpić błąd PEP 668."
+        echo "⚠️ WARNING: Using system pip3 (no venv found). PEP 668 error may occur."
     fi
 
-    echo "⏳ Instalowanie zależności z requirements.txt..."
+    echo "⏳ Installing dependencies from requirements.txt..."
     if $PIP_PATH install --upgrade -r requirements.txt > pip_error.log 2>&1; then
-        STATUS_DEPS="✅ ZAAKTUALIZOWANO"
+        STATUS_DEPS="✅ UPDATED"
         rm -f pip_error.log
     else
-        STATUS_DEPS="❌ BŁĄD PIP (sprawdź pip_error.log)"
+        STATUS_DEPS="❌ PIP ERROR (check pip_error.log)"
         # Suggest fix for PEP 668 if visible in log
         if grep -q "externally-managed-environment" pip_error.log; then
-             STATUS_DEPS="❌ BŁĄD (PEP 668 - spróbuj: python3 -m venv venv)"
+             STATUS_DEPS="❌ ERROR (PEP 668 - try: python3 -m venv venv)"
         fi
     fi
 else
-    STATUS_DEPS="➖ BRAK REQ.TXT"
+    STATUS_DEPS="➖ NO REQ.TXT"
 fi
 
 
@@ -95,23 +95,23 @@ fi
 # Wait a moment and check if still running
 sleep 2
 if screen -list | grep -q "$SESSION_NAME"; then
-    STATUS_START="✅ URUCHOMIONO"
+    STATUS_START="✅ STARTED"
 else
-    STATUS_START="❌ CRASH (zobacz screen -r lub logi)"
+    STATUS_START="❌ CRASH (check screen -r or logs)"
 fi
 
 
 # Calculation of time
 ELAPSED_TIME=$(( SECONDS - START_TIME ))
 
-echo " [1/4] Zatrzymanie bota:  $STATUS_STOP"
-echo " [2/4] Kod (Git):        $STATUS_GIT"
-echo " [3/4] Zależności:       $STATUS_DEPS"
-echo " [4/4] Start nowej sesji: $STATUS_START"
+echo " [1/4] Stop Bot:        $STATUS_STOP"
+echo " [2/4] Code (Git):      $STATUS_GIT"
+echo " [3/4] Dependencies:    $STATUS_DEPS"
+echo " [4/4] Start New Session: $STATUS_START"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo " $COMMIT_INFO"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo " ✨ Wynik:  Pomyślnie zaktualizowano!"
-echo " ⏳ Czas:   ${ELAPSED_TIME} sekund"
-echo " 🔍 Podgląd: screen -r $SESSION_NAME"
+echo " ✨ Result:  Successfully updated!"
+echo " ⏳ Time:    ${ELAPSED_TIME} seconds"
+echo " 🔍 View:    screen -r $SESSION_NAME"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

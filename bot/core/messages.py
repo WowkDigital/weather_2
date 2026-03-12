@@ -1,7 +1,7 @@
 from datetime import datetime
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
-from config import MOON_EMOJIS
-from utils import get_temp_emoji, get_feelslike_emoji, get_visual_scale, get_wind_emoji, get_uv_emoji
+from bot.core.config import MOON_EMOJIS
+from bot.core.utils import get_temp_emoji, get_feelslike_emoji, get_visual_scale, get_wind_emoji, get_uv_emoji
 
 def format_weather_message(data: dict, city: str, is_tomorrow: bool = False) -> tuple:
     if "error" in data:
@@ -34,7 +34,7 @@ def format_weather_message(data: dict, city: str, is_tomorrow: bool = False) -> 
         gust_kph = "N/A"
         aqi_index = "N/A"
         
-        header = f"📅 *POGODA NA JUTRO*\n📍 {actual_city}, {country}\n🗓️ Data: {date_str}"
+        header = f"📅 *TOMORROW'S WEATHER*\n📍 {actual_city}, {country}\n🗓️ Date: {date_str}"
     else:
         target_day_data = forecast_days[0] if forecast_days else {}
         day = target_day_data.get("day", {})
@@ -56,7 +56,7 @@ def format_weather_message(data: dict, city: str, is_tomorrow: bool = False) -> 
         maxtemp_c = day.get("maxtemp_c", "N/A")
         mintemp_c = day.get("mintemp_c", "N/A")
         
-        header = f"🌍 *AKTUALNA POGODA*\n📍 {actual_city}, {country}\n🕒 Czas: {local_time}"
+        header = f"🌍 *CURRENT WEATHER*\n📍 {actual_city}, {country}\n🕒 Time: {local_time}"
 
     cloud_scale = get_visual_scale(clouds, 100, "☁️", "—", "✨")
     humidity_scale = get_visual_scale(humidity, 100, "💧")
@@ -71,9 +71,9 @@ def format_weather_message(data: dict, city: str, is_tomorrow: bool = False) -> 
     if aqi_index != "N/A":
         try:
             val = int(aqi_index)
-            if val <= 3: aqi_desc = "Dobra 🟢"
-            elif val <= 6: aqi_desc = "Średnia 🟡"
-            else: aqi_desc = "Zła 🔴"
+            if val <= 3: aqi_desc = "Good 🟢"
+            elif val <= 6: aqi_desc = "Moderate 🟡"
+            else: aqi_desc = "Poor 🔴"
         except: aqi_desc = str(aqi_index)
 
     astro = target_day_data.get("astro", {})
@@ -88,33 +88,33 @@ def format_weather_message(data: dict, city: str, is_tomorrow: bool = False) -> 
     alerts_data = data.get("alerts", {}).get("alert", [])
     alerts_section = ""
     if alerts_data and not is_tomorrow:
-        alerts_section = "\n⚠️ *AKTYWNE ALERTY:*\n" + "\n".join([f"{a.get('event')}" for a in alerts_data[:2]])
+        alerts_section = "\n⚠️ *ACTIVE ALERTS:*\n" + "\n".join([f"{a.get('event')}" for a in alerts_data[:2]])
 
     msg = [
         header,
         "",
-        "🌡️ *TEMPERATURA*",
-        f"Aktualna: {temp_c}°C {temp_icon}",
-        f"Odczuwalna: {feelslike_c}°C {feels_icon}" if feelslike_c != "N/A" else f"Zakres: {mintemp_c} - {maxtemp_c}°C 📉",
+        "🌡️ *TEMPERATURE*",
+        f"Current: {temp_c}°C {temp_icon}",
+        f"Feels like: {feelslike_c}°C {feels_icon}" if feelslike_c != "N/A" else f"Range: {mintemp_c} - {maxtemp_c}°C 📉",
         "",
-        "☁️ *NIEBO I WARUNKI*",
-        f"Stan: {condition_text}",
-        f"Chmury: [{cloud_scale}]",
-        f"Opady: [{rain_scale}] {chance_of_rain}%",
+        "☁️ *SKY & CONDITIONS*",
+        f"Condition: {condition_text}",
+        f"Clouds: [{cloud_scale}]",
+        f"Precipitation: [{rain_scale}] {chance_of_rain}%",
         "",
-        "💧 *SZCZEGÓŁY*",
-        f"Wilgotność: [{humidity_scale}] {humidity}%",
-        f"Indeks UV: {uv} {uv_icon}",
-        f"Powietrze: {aqi_desc}" if aqi_desc else "",
+        "💧 *DETAILS*",
+        f"Humidity: [{humidity_scale}] {humidity}%",
+        f"UV Index: {uv} {uv_icon}",
+        f"Air Quality: {aqi_desc}" if aqi_desc else "",
         "",
-        "💨 *WIATR I CIŚNIENIE*",
+        "💨 *WIND & PRESSURE*",
         f"Power: [{wind_scale}] {wind_kph} km/h",
-        f"Porywy: {gust_kph} km/h" if gust_kph != "N/A" else "",
-        f"Ciśnienie: {pressure_mb} hPa" if pressure_mb != "N/A" else "",
+        f"Gusts: {gust_kph} km/h" if gust_kph != "N/A" else "",
+        f"Pressure: {pressure_mb} hPa" if pressure_mb != "N/A" else "",
         "",
-        "🌓 *ASTRONOMIA*",
+        "🌓 *ASTRONOMY*",
         f"🌅 {sunrise_24h} | 🌇 {sunset_24h}",
-        f"Księżyc: {astro.get('moon_phase', 'N/A')} {MOON_EMOJIS.get(astro.get('moon_phase'), '🌙')}",
+        f"Moon: {astro.get('moon_phase', 'N/A')} {MOON_EMOJIS.get(astro.get('moon_phase'), '🌙')}",
         alerts_section
     ]
 
@@ -122,42 +122,42 @@ def format_weather_message(data: dict, city: str, is_tomorrow: bool = False) -> 
 
     keyboard = []
     if is_tomorrow:
-        keyboard.append([InlineKeyboardButton("🔙 Dzisiaj", callback_data=f"today_{city}")])
+        keyboard.append([InlineKeyboardButton("🔙 Today", callback_data=f"today_{city}")])
     else:
-        keyboard.append([InlineKeyboardButton("📅 Jutro", callback_data=f"tomorrow_{city}")])
+        keyboard.append([InlineKeyboardButton("📅 Tomorrow", callback_data=f"tomorrow_{city}")])
     
     chart_callback = f"charttomorrow_{city}" if is_tomorrow else f"chart_{city}"
     keyboard.append([
-        InlineKeyboardButton("📈 Wykres 24h", callback_data=chart_callback),
-        InlineKeyboardButton("🔄 Odśwież", callback_data=f"refresh_{city}")
+        InlineKeyboardButton("📈 24h Chart", callback_data=chart_callback),
+        InlineKeyboardButton("🔄 Refresh", callback_data=f"refresh_{city}")
     ])
     
     keyboard.append([
-        InlineKeyboardButton("🔔 Subskrybuj prognozę o 7:00", callback_data=f"sub_{city}")
+        InlineKeyboardButton("🔔 Subscribe to 7:00 AM forecast", callback_data=f"sub_{city}")
     ])
     
     return final_msg, InlineKeyboardMarkup(keyboard)
 
 def get_help_message() -> str:
     return (
-        "❓ *Jak korzystać z bota?*\n\n"
-        "📍 *Miasto:* Wpisz nazwę dowolnego miasta (np. `Warszawa`), aby sprawdzić aktualną pogodę.\n"
-        "🗺️ *Lokalizacja:* Wyślij swoją lokalizację GPS przyciskiem poniżej.\n"
-        "🔔 *Subskrypcja:* Wpisz `/sub Miasto`, aby otrzymywać prognozę codziennie o 7:00.\n"
-        "📈 *Wykresy:* Po wyszukaniu miasta kliknij przycisk 'Wykres 24h'.\n\n"
-        "🤖 Jestem tutaj, aby pomóc Ci zaplanować dzień!"
+        "❓ *How to use the bot?*\n\n"
+        "📍 *City:* Type any city name (e.g., `London`) to check current weather.\n"
+        "🗺️ *Location:* Send your GPS location using the button below.\n"
+        "🔔 *Subscription:* Type `/sub City` to receive daily forecasts at 7:00 AM.\n"
+        "📈 *Charts:* Click the '24h Chart' button after searching for a city.\n\n"
+        "🤖 I'm here to help you plan your day!"
     )
 
 def get_sticker_message() -> str:
     return (
-        "Fajna naklejka! 😍 Niestety nie umiem ich jeszcze interpretować, "
-        "ale za to świetnie znam się na pogodzie.\n\n"
-        "Wpisz nazwę miasta lub wyślij lokalizację, aby sprawdzić prognozę! 🌤️"
+        "Cool sticker! 😍 I can't interpret them yet, "
+        "but I'm an expert in weather.\n\n"
+        "Type a city name or send your location to check the forecast! 🌤️"
     )
 
 def get_unknown_command_message() -> str:
     return (
-        "🤖 *Ups! Nie znam tej komendy.*\n\n"
-        "Wpisz /start, aby zobaczyć główne menu, lub po prostu podaj nazwę miasta, "
-        "dla którego chcesz sprawdzić pogodę."
+        "🤖 *Oops! I don't know this command.*\n\n"
+        "Type /start to see the main menu, or just enter the name of the city "
+        "you want to check the weather for."
     )
