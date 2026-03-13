@@ -26,3 +26,8 @@ def remove_subscription(chat_id):
             json.dump(subscriptions, f, ensure_ascii=False, indent=2)
         return True
     return False
+
+def get_subscription(chat_id):
+    subscriptions = load_subscriptions()
+    return subscriptions.get(str(chat_id))
+

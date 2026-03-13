@@ -3,8 +3,8 @@ from telegram.request import HTTPXRequest
 from bot.core.config import TELEGRAM_TOKEN
 from bot.handlers import (
     start, handle_message, handle_location, button_callback, 
-    subscribe, unsubscribe, help_command, handle_sticker, 
-    handle_unknown_command, handle_unsupported
+    subscribe_command, unsubscribe_command, my_subscription_command,
+    help_command, handle_sticker, handle_unknown_command, handle_unsupported
 )
 from bot.tasks.daily import send_daily_weather
 from datetime import time
@@ -28,10 +28,11 @@ def main():
     # Command handlers
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
-    application.add_handler(CommandHandler("sub", subscribe))
-    application.add_handler(CommandHandler("subscribe", subscribe))
-    application.add_handler(CommandHandler("unsub", unsubscribe))
-    application.add_handler(CommandHandler("unsubscribe", unsubscribe))
+    application.add_handler(CommandHandler("sub", subscribe_command))
+    application.add_handler(CommandHandler("subscribe", subscribe_command))
+    application.add_handler(CommandHandler("unsub", unsubscribe_command))
+    application.add_handler(CommandHandler("unsubscribe", unsubscribe_command))
+    application.add_handler(CommandHandler("mysub", my_subscription_command))
     
     # Unknown commands
     application.add_handler(MessageHandler(filters.COMMAND, handle_unknown_command))

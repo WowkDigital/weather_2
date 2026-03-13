@@ -156,7 +156,9 @@ def get_help_message() -> str:
         "❓ *How to use the bot?*\n\n"
         "📍 *City:* Type any city name (e.g., `London`) to check current weather.\n"
         "🗺️ *Location:* Send your GPS location using the button below.\n"
-        "🔔 *Subscription:* Type `/sub City` to receive daily forecasts at 7:00 AM.\n"
+        "🔔 *Subscription:* Type `/sub City` to receive daily forecasts.\n"
+        "ℹ️ *My Sub:* Type `/mysub` to see your active subscription.\n"
+        "🔕 *Unsubscribe:* Type `/unsub` to cancel daily forecasts.\n"
         "📈 *Charts:* Click the '24h Chart' button after searching for a city.\n\n"
         "🤖 I'm here to help you plan your day!"
     )
