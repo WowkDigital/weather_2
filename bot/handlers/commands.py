@@ -2,6 +2,7 @@ from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ContextTypes
 from bot.core.messages import get_help_message
 from bot.core.subscriptions import save_subscription, remove_subscription
+from bot.core.utils import normalize_city_name
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
@@ -30,7 +31,7 @@ async def subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Please provide a city name, e.g.: `/sub London`", parse_mode="Markdown")
         return
     
-    city = " ".join(context.args)
+    city = normalize_city_name(" ".join(context.args))
     save_subscription(update.effective_chat.id, city)
     await update.message.reply_text(f"✅ I will send you a forecast for *{city}* every day at 7:00 AM!", parse_mode="Markdown")
 

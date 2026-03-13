@@ -10,11 +10,15 @@ from bot.services.weather import fetch_weather_data
 from bot.services.charts import generate_feelslike_chart
 from bot.core.messages import format_weather_message
 from bot.core.subscriptions import save_subscription
+from bot.core.utils import normalize_city_name
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     if not text:
         return
+        
+    # Normalize Polish characters for search
+    query = normalize_city_name(text)
         
     # Quick check for greetings
     greetings = ["hi", "hello", "hey", "good morning", "morning"]
@@ -30,9 +34,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     loading_msg = await update.message.reply_text(f"⏳ Checking weather for: {text}...")
     
     loop = asyncio.get_event_loop()
-    data = await loop.run_in_executor(None, fetch_weather_data, text, 2)
+    data = await loop.run_in_executor(None, fetch_weather_data, query, 2)
     
-    msg, reply_markup = format_weather_message(data, text, is_tomorrow=False)
+    msg, reply_markup = format_weather_message(data, query, is_tomorrow=False)
     
     try:
         await loading_msg.edit_text(msg, reply_markup=reply_markup, parse_mode="Markdown")
@@ -63,6 +67,9 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     data_str = query.data
     action, city = data_str.split("_", 1)
+    
+    # Normalize city name from callback data
+    city = normalize_city_name(city)
     
     loop = asyncio.get_event_loop()
     data = await loop.run_in_executor(None, fetch_weather_data, city, 2)

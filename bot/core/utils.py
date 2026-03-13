@@ -47,3 +47,13 @@ def get_uv_emoji(uv):
         if u <= 10: return "🔴"
         return "🟣"
     except: return "☀️"
+
+def normalize_city_name(city_name: str) -> str:
+    if not city_name:
+        return city_name
+    mapping = str.maketrans(
+        "ąćęłńóśźżĄĆĘŁŃÓŚŹŻ",
+        "acelnoszzACELNOSZZ"
+    )
+    return city_name.translate(mapping)
+
