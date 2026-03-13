@@ -13,6 +13,30 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 # 1. Start: Anchor to script directory
 cd "$(dirname "$0")"
 
+# 1.2 Branch Selection
+BRANCH_FILE=".current_branch"
+if [ -f "$BRANCH_FILE" ]; then
+    BRANCH=$(cat "$BRANCH_FILE")
+else
+    BRANCH="main"
+fi
+
+# Ask if user wants to change branch
+echo "Current branch: $BRANCH"
+read -t 3 -p "Change branch? (y/N): " CHANGE_BRANCH
+if [[ $CHANGE_BRANCH =~ ^[Yy]$ ]]; then
+    read -p "Enter branch name (e.g. main, b3): " NEW_BRANCH
+    if [ ! -z "$NEW_BRANCH" ]; then
+        BRANCH=$NEW_BRANCH
+        echo "$BRANCH" > "$BRANCH_FILE"
+    fi
+fi
+
+# Ensure we are on the correct branch locally
+echo "⏳ Checking out branch: $BRANCH..."
+git fetch origin > /dev/null 2>&1
+git checkout "$BRANCH" > /dev/null 2>&1
+
 # 1.1 Stop Bot
 if screen -list | grep -q "$SESSION_NAME"; then
     screen -S "$SESSION_NAME" -X quit > /dev/null 2>&1
@@ -23,7 +47,7 @@ fi
 
 # 2. Git Pull
 PRE_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-GIT_OUT=$(git pull origin main 2>&1)
+GIT_OUT=$(git pull origin "$BRANCH" 2>&1)
 GIT_EXIT=$?
 
 if [ $GIT_EXIT -eq 0 ]; then
