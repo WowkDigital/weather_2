@@ -7,7 +7,7 @@ from bot.core.utils import normalize_city_name
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [KeyboardButton("📍 Send my location", request_location=True)],
-        [KeyboardButton("London"), KeyboardButton("New York")]
+        [KeyboardButton("Wrocław"), KeyboardButton("Warszawa")]
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     await update.message.reply_text(
