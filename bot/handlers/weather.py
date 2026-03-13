@@ -102,13 +102,14 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.reply_text(f"✅ Subscription active! Forecast for *{city}* will be sent daily at 7:00 AM.", parse_mode="Markdown")
         return
 
-    is_tomorrow = (action == "tomorrow")
+    is_tomorrow = (action in ["tomorrow", "moretomorrow", "charttomorrow"])
+    full_details = (action in ["more", "moretomorrow"])
     
     if action == "refresh":
         invalidate_caches(city)
         data = await loop.run_in_executor(None, fetch_weather_data, city, 2)
 
-    msg, reply_markup = format_weather_message(data, city, is_tomorrow=is_tomorrow)
+    msg, reply_markup = format_weather_message(data, city, is_tomorrow=is_tomorrow, full_details=full_details)
     
     try:
         await query.edit_message_text(text=msg, reply_markup=reply_markup, parse_mode="Markdown")
